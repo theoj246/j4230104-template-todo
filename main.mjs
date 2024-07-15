@@ -10,39 +10,42 @@ const prisma = new PrismaClient();
 
 const template = fs.readFileSync("./template.html", "utf-8");
 app.get("/", async (request, response) => {
-  const todos = await prisma.todo.findMany();
-  const user = await prisma.user.findFirst();
-  const html = template
-    .replace(
-      "<!-- todos -->",
-      user
-        ? todos
-          .filter(todo => todo.user === user.username)
+  const user = await prisma.user.findFirst(); // Assuming there's only one user
+  if (user) {
+    const todos = await prisma.todo.findMany({
+      where: { user: user.username }
+    });
+    const html = template
+      .replace(
+        "<!-- todos -->",
+        todos
           .map(
             (todo) => `
-                <li>
-                  <span>${escapeHTML(todo.title)}</span>
-                  <form method="post" action="/delete" class="delete-form">
-                    <input type="hidden" name="id" value="${todo.id}" />
-                    <input type="checkbox" name="delete" value="削除" onclick="this.form.submit()">
-                  </form>
-                </li>
-              `,
+              <li>
+                <span>${escapeHTML(todo.title)}</span>
+                <form method="post" action="/update-done" class="update-done-form">
+                  <input type="hidden" name="id" value="${todo.id}" />
+                  <input type="checkbox" name="done" value="true" ${todo.done ? 'checked' : ''} onclick="this.form.submit()">
+                </form>
+              </li>
+            `,
           )
-          .join("")
-        : ""
-    )
-    .replace("<!-- username -->", user ? escapeHTML(user.username) : "");
-  response.send(html);
+          .join(""),
+      )
+      .replace(/<!-- username -->/g, escapeHTML(user.username));
+    response.send(html);
+  } else {
+    response.send(template.replace(/<!-- todos -->/g, "").replace(/<!-- username -->/g, ""));
+  }
 });
 
 app.post("/create", async (request, response) => {
-  await prisma.todo.create({
-    data: {
-      title: request.body.title,
-      user: (await prisma.user.findFirst())?.username || ""
-    },
-  });
+  const user = await prisma.user.findFirst(); // Assuming there's only one user
+  if (user) {
+    await prisma.todo.create({
+      data: { title: request.body.title, user: user.username },
+    });
+  }
   response.redirect("/");
 });
 
@@ -67,6 +70,46 @@ app.post('/add-user', async (req, res) => {
     console.error(error);
     res.status(500).send('Error creating user');
   }
+});
+
+app.post('/recall-todos', async (req, res) => {
+  const { username } = req.body;
+  const user = await prisma.user.findFirst();
+  if (user && user.username === username) {
+    const todos = await prisma.todo.findMany({
+      where: { user: user.username }
+    });
+    const html = template
+      .replace(
+        "<!-- todos -->",
+        todos
+          .map(
+            (todo) => `
+              <li>
+                <span>${escapeHTML(todo.title)}</span>
+                <form method="post" action="/update-done" class="update-done-form">
+                  <input type="hidden" name="id" value="${todo.id}" />
+                  <input type="checkbox" name="done" value="true" ${todo.done ? 'checked' : ''} onclick="this.form.submit()">
+                </form>
+              </li>
+            `,
+          )
+          .join(""),
+      )
+      .replace(/<!-- username -->/g, escapeHTML(user.username));
+    res.send(html);
+  } else {
+    res.status(403).send('Unauthorized');
+  }
+});
+
+app.post('/update-done', async (req, res) => {
+  const { id, done } = req.body;
+  await prisma.todo.update({
+    where: { id: parseInt(id) },
+    data: { done: done === 'true' },
+  });
+  res.redirect('/');
 });
 
 app.listen(3000);
