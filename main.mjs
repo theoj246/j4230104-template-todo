@@ -11,7 +11,7 @@ const prisma = new PrismaClient();
 const template = fs.readFileSync("./template.html", "utf-8");
 app.get("/", async (request, response) => {
   const todos = await prisma.todo.findMany();
-  const user = await prisma.user.findFirst(); // Assuming there's only one user
+  const user = await prisma.user.findFirst();
   const html = template
     .replace(
       "<!-- todos -->",
@@ -24,7 +24,7 @@ app.get("/", async (request, response) => {
                   <span>${escapeHTML(todo.title)}</span>
                   <form method="post" action="/delete" class="delete-form">
                     <input type="hidden" name="id" value="${todo.id}" />
-                    <button type="submit">削除</button>
+                    <input type="checkbox" name="delete" value="削除" onclick="this.form.submit()">
                   </form>
                 </li>
               `,
