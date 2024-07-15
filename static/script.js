@@ -7,3 +7,12 @@ for (const deleteForm of deleteForms) {
     }
   };
 }
+
+const userForm = document.querySelector(".user-form");
+
+userForm.onsubmit = (e) => {
+  if (!window.confirm("本当にユーザーを追加しますか？")) {
+    e.preventDefault();
+  }
+};
+
