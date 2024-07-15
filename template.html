@@ -1,19 +1,39 @@
 <!doctype html>
 <html lang="ja">
-  <head>
-    <meta charset="utf-8" />
-    <title>ToDoリスト</title>
-    <link rel="stylesheet" href="/style.css" />
-  </head>
-  <body>
-    <h1>ToDoリスト</h1>
-    <ul>
-      <!-- todos -->
-    </ul>
-    <form action="/create" method="post">
-      <input type="text" name="title" />
-      <button type="submit">追加</button>
-    </form>
-    <script src="/script.js"></script>
-  </body>
+
+<head>
+  <meta charset="utf-8">
+  <title>ToDoリスト</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h1>ToDoリスト</h1>
+    </header>
+    <main>
+      <ul class="todo-list">
+        <!-- todos -->
+      </ul>
+      <form action="/create" method="post" class="todo-form">
+        <input type="text" name="title" placeholder="新しいタスクを追加" required>
+        <input type="date" name="date" required>
+        <button type="submit">追加</button>
+      </form>
+
+      <h2>ユーザ名でTodo保存</h2>
+      <form id="user-form" action="/add-user" method="POST">
+        <input type="text" name="username" placeholder="ユーザー名を追加" required>
+        <button type="submit">保存</button>
+      </form>
+
+      <div id="username-display">
+        <!-- username -->
+      </div>
+    </main>
+  </div>
+  <script src="/script.js"></script>
+</body>
+
 </html>

@@ -8,6 +8,14 @@ datasource db {
 }
 
 model Todo {
-  id    Int    @id @default(autoincrement())
+  id    Int      @id @default(autoincrement())
   title String
+  user  String   @default("")
+  done  Boolean  @default(false)
+  date  DateTime @default(now())
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  username String @unique
 }
