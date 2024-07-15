@@ -20,15 +20,21 @@ app.get("/", async (request, response) => {
         "<!-- todos -->",
         todos
           .map(
-            (todo) => `
-              <li>
-                <span>${escapeHTML(todo.title)}</span>
-                <form method="post" action="/update-done" class="update-done-form">
-                  <input type="hidden" name="id" value="${todo.id}" />
-                  <input type="checkbox" name="done" value="true" ${todo.done ? 'checked' : ''} onclick="this.form.submit()">
-                </form>
-              </li>
-            `,
+            (todo) => {
+              const timeLeft = Math.max(0, new Date(todo.date) - new Date());
+              const daysLeft = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+              return `
+                <li>
+                  <span>${escapeHTML(todo.title)}</span>
+                  <span>(${new Date(todo.date).toLocaleString()})</span>
+                  <span><b>${daysLeft} 日前</b></span>
+                  <form method="post" action="/update-done" class="update-done-form">
+                    <input type="hidden" name="id" value="${todo.id}" />
+                    <input type="checkbox" name="done" value="true" ${todo.done ? 'checked' : ''} onclick="this.form.submit()">
+                  </form>
+                </li>
+              `;
+            }
           )
           .join(""),
       )
@@ -43,7 +49,7 @@ app.post("/create", async (request, response) => {
   const user = await prisma.user.findFirst(); // Assuming there's only one user
   if (user) {
     await prisma.todo.create({
-      data: { title: request.body.title, user: user.username },
+      data: { title: request.body.title, user: user.username, date: new Date(request.body.date) },
     });
   }
   response.redirect("/");
@@ -87,6 +93,7 @@ app.post('/recall-todos', async (req, res) => {
             (todo) => `
               <li>
                 <span>${escapeHTML(todo.title)}</span>
+                <span>(${new Date(todo.date).toLocaleString()})</span>
                 <form method="post" action="/update-done" class="update-done-form">
                   <input type="hidden" name="id" value="${todo.id}" />
                   <input type="checkbox" name="done" value="true" ${todo.done ? 'checked' : ''} onclick="this.form.submit()">
